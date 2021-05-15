@@ -17,11 +17,11 @@ public class Server extends javax.swing.JFrame{
 
     private Socket socket = null;
     private static boolean draw = false;
-    BufferedImage bi = null;
+    static BufferedImage bi = null;
 
-    public Server() {
-        initComponents();
-    }
+//    public Server() {
+//        initComponents();
+//    }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
@@ -44,7 +44,7 @@ public class Server extends javax.swing.JFrame{
         pack();
     }// </editor-fold>
 
-    private static void handleConnections() throws IOException, ClassNotFoundException  {
+    private void handleConnections() throws IOException, ClassNotFoundException  {
         ServerSocket ss = new ServerSocket(5000);
 
         while (true) {
@@ -58,30 +58,32 @@ public class Server extends javax.swing.JFrame{
 
             byte[] data = new byte[len];
             dis.readFully(data);
-            dis.close();
-            in.close();
 
             InputStream ian = new ByteArrayInputStream(data);
-            BufferedImage bI = ImageIO.read(ian);
-            System.out.println(bI);
+            bi = ImageIO.read(ian);
+            draw = true;
+            repaint();
 
             PrintWriter pr = new PrintWriter(s.getOutputStream());
 
             pr.println("Sim"); // Comando de retorno
             pr.flush(); // limpa o buffer do PrintWriter
+//            dis.close();
+//            in.close();
         }
+    }
+
+    private void refresh() {
+
     }
 
     @Override
     public void paint(Graphics g) {
         if(draw) {
             try {
-                int scale = 2;
-                Robot r = new Robot();
-
-                int telaX = 500;
-                int telaY = 500;
-                bi = r.createScreenCapture(new Rectangle(telaX, telaY)); // by block
+                int scale = 1;
+                int telaX = 100;
+                int telaY = 100;
 
                 for (int y = 0; y < telaY; y++) {
                     for (int x = 0; x < telaX; x++) {
@@ -96,15 +98,19 @@ public class Server extends javax.swing.JFrame{
 
                     }
                 }
-
+                draw = false;
             } catch (Exception e) {
                 e.printStackTrace();
+                draw = false;
             }
         }
-        draw = false;
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+        Server s = new Server();
+        s.setVisible(true);
+        s.initComponents();
+        s.handleConnections();
 
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -126,10 +132,8 @@ public class Server extends javax.swing.JFrame{
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Server().setVisible(true);
             }
         });
-        handleConnections();
     }
 
 }

@@ -11,7 +11,7 @@ public class Client extends javax.swing.JFrame {
 
     public Client() {
         initComponents();
-        targetIP = "172.28.41.213";
+        targetIP = "172.30.74.137";
         this.tcpCom = new TCPCommunication(targetIP);
     }
 
@@ -56,32 +56,35 @@ public class Client extends javax.swing.JFrame {
     @Override
     public void paint(Graphics g) {
         if (capturar) {
-            try {
-                int scale = 2;
-                Robot r = new Robot();
+            while(true) {
+                try {
+                    int scale = 2;
+                    Robot r = new Robot();
 
-                int telaX = 500;
-                int telaY = 500;
-                BufferedImage bi = r.createScreenCapture(new Rectangle(telaX, telaY)); // by block
-//                System.out.println(bi);
-                response = tcpCom.sendCommand(bi);
-                System.out.println(response);
-//                for (int y = 0; y < telaY; y++) {
-//                    for (int x = 0; x < telaX; x++) {
+                    int telaX = 100;
+                    int telaY = 100;
+                    BufferedImage bi = r.createScreenCapture(new Rectangle(telaX, telaY)); // by block
+                    response = tcpCom.sendCommand(bi);
+                    System.out.println(response);
+                    Thread.sleep(67);
+//                    for (int y = 0; y < telaY; y++) {
+//                        for (int x = 0; x < telaX; x++) {
 //
-//                        g.setColor(new Color(bi.getRGB(x, y)));
+//                            g.setColor(new Color(bi.getRGB(x, y)));
 //
-//                        //ARGB                        0       0      0        0
-//                        //int cor = bi.getRGB(x, y) & 0b00000000111111100000000011111111;
-//                        //g.setColor(new Color(cor));
+//                            //ARGB                        0       0      0        0
+//                            //int cor = bi.getRGB(x, y) & 0b00000000111111100000000011111111;
+//                            //g.setColor(new Color(cor));
 //
-//                        g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
+//                            g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
 //
+//                        }
 //                    }
-//                }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
         }
         capturar = false;

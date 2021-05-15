@@ -34,8 +34,8 @@ public class TCPCommunication {
         dos.writeInt(bytes.length);
         dos.write(bytes, 0, bytes.length);
 
-        dos.close();
-        pr.close();
+//        dos.close();
+//        pr.close();
 
         InputStreamReader in = new InputStreamReader(s.getInputStream());
         BufferedReader bf = new BufferedReader(in);
