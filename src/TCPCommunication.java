@@ -1,46 +1,61 @@
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.nio.ByteBuffer;
 
 public class TCPCommunication {
 
     private String targetIP;
+    private DatagramSocket senderSocket;
 
-    public TCPCommunication(String targetIP) {
+    public TCPCommunication(String targetIP) throws SocketException {
         this.targetIP = targetIP;
+        this.senderSocket = new DatagramSocket();
     }
 
-    public String sendCommand(BufferedImage command) throws IOException {
+    public void sendCommand(BufferedImage command, int xPosition, int yPosition) throws IOException {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         ImageIO.write(command, "jpg", baos);
         baos.flush();
+        ByteBuffer bbx =  ByteBuffer.allocate(4);
+        ByteBuffer bby =  ByteBuffer.allocate(4);
+        ByteBuffer bbis = ByteBuffer.allocate(4);
+        bbx.putInt(xPosition);
+        bby.putInt(yPosition);
+        byte[] x = bbx.array();
+        byte[] y = bby.array();
+        byte[] imageData = baos.toByteArray();
+        bbis.putInt(imageData.length);
+        byte[] is = bbis.array();
+        byte[] data = new byte[imageData.length + x.length + y.length + is.length];
 
-        byte[] bytes = baos.toByteArray();
-        baos.close();
+        int aux = 0;
+        for (int i = 0; i < x.length; i++) {
+            data[i] = x[i];
+            aux++;
+        }
+        for (int i = 0; i < y.length; i++) {
+            data[aux] = y[i];
+            aux++;
+        }
+        for (int i = 0; i < is.length; i++) {
+            data[aux] = is[i];
+            aux++;
+        }
+        for (int i = 0; i < imageData.length; i++) {
+            data[aux] = imageData[i];
+            aux++;
+        }
 
-        Socket s = new Socket(targetIP, 5000);
-
-        OutputStream  pr = s.getOutputStream();
-        DataOutputStream dos = new DataOutputStream(pr);
-        dos.writeInt(bytes.length);
-        dos.write(bytes, 0, bytes.length);
-
-//        dos.close();
-//        pr.close();
-
-        InputStreamReader in = new InputStreamReader(s.getInputStream());
-        BufferedReader bf = new BufferedReader(in);
-
-        return bf.readLine();
+        DatagramPacket send = new DatagramPacket(data, data.length, InetAddress.getByName(targetIP), 5000);
+        senderSocket.send(send);
     }
 
 }

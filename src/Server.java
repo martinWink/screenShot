@@ -2,16 +2,13 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 public class Server extends javax.swing.JFrame{
 
@@ -19,9 +16,8 @@ public class Server extends javax.swing.JFrame{
     private static boolean draw = false;
     static BufferedImage bi = null;
 
-//    public Server() {
-//        initComponents();
-//    }
+    private int xPosition = 0, yPosition = 0;
+
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">
@@ -44,60 +40,58 @@ public class Server extends javax.swing.JFrame{
         pack();
     }// </editor-fold>
 
-    private void handleConnections() throws IOException, ClassNotFoundException  {
-        ServerSocket ss = new ServerSocket(5000);
+    private void handleConnections() throws IOException  {
+        DatagramSocket ds = new DatagramSocket(5000);
+        ds.getReceiveBufferSize();
 
+        byte[] receivedData = new byte[ds.getReceiveBufferSize()];
         while (true) {
+            DatagramPacket receivePacket = new DatagramPacket(receivedData, receivedData.length);
+            ds.receive(receivePacket);
 
-            Socket s = ss.accept();
+            byte[] x = new byte[4];
+            byte[] y = new byte[4];
+            byte[] is = new byte[4];
+            int imageSize;
 
-            InputStream in = s.getInputStream();
-            DataInputStream dis = new DataInputStream(in);
+            int aux = 0;
+            for(int i = 0; i < 4; i++) {
+                x[i] = receivedData[aux];
+                aux++;
+            }
+            xPosition = ByteBuffer.wrap(x).getInt();
+            for(int i = 0; i < 4; i++) {
+                y[i] = receivedData[aux];
+                aux++;
+            }
+            yPosition = ByteBuffer.wrap(y).getInt();
 
-            int len = dis.readInt();
+            for(int i = 0; i < 4; i++) {
+                is[i] = receivedData[aux];
+                aux++;
+            }
+            imageSize = ByteBuffer.wrap(is).getInt();
+            byte[] image = new byte[imageSize];
+            for(int i = 0; i < imageSize; i++) {
+                image[i] = receivedData[aux];
+                aux++;
+            }
 
-            byte[] data = new byte[len];
-            dis.readFully(data);
-
-            InputStream ian = new ByteArrayInputStream(data);
+            InputStream ian = new ByteArrayInputStream(image);
             bi = ImageIO.read(ian);
+            bi.setRGB(0, 0, 255);
             draw = true;
             repaint();
 
-            PrintWriter pr = new PrintWriter(s.getOutputStream());
-
-            pr.println("Sim"); // Comando de retorno
-            pr.flush(); // limpa o buffer do PrintWriter
-//            dis.close();
-//            in.close();
         }
-    }
-
-    private void refresh() {
-
     }
 
     @Override
     public void paint(Graphics g) {
         if(draw) {
             try {
-                int scale = 1;
-                int telaX = 100;
-                int telaY = 100;
-
-                for (int y = 0; y < telaY; y++) {
-                    for (int x = 0; x < telaX; x++) {
-
-                        g.setColor(new Color(bi.getRGB(x, y)));
-
-                        //ARGB                        0       0      0        0
-                        //int cor = bi.getRGB(x, y) & 0b00000000111111100000000011111111;
-                        //g.setColor(new Color(cor));
-
-                        g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
-
-                    }
-                }
+                Graphics2D g2 = (Graphics2D) g;
+                g2.drawImage(bi, xPosition, yPosition, this);
                 draw = false;
             } catch (Exception e) {
                 e.printStackTrace();

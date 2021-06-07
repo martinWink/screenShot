@@ -1,17 +1,15 @@
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.net.SocketException;
 
 public class Client extends javax.swing.JFrame {
     private boolean capturar = false;
     TCPCommunication tcpCom;
     String targetIP;
-    String response;
 
-    public Client() {
+    public Client() throws SocketException {
         initComponents();
-        targetIP = "172.30.74.137";
+        targetIP = "192.168.0.15";
         this.tcpCom = new TCPCommunication(targetIP);
     }
 
@@ -56,36 +54,36 @@ public class Client extends javax.swing.JFrame {
     @Override
     public void paint(Graphics g) {
         if (capturar) {
-            while(true) {
-                try {
-                    int scale = 2;
-                    Robot r = new Robot();
-
-                    int telaX = 100;
-                    int telaY = 100;
-                    BufferedImage bi = r.createScreenCapture(new Rectangle(telaX, telaY)); // by block
-                    response = tcpCom.sendCommand(bi);
-                    System.out.println(response);
-                    Thread.sleep(67);
-//                    for (int y = 0; y < telaY; y++) {
-//                        for (int x = 0; x < telaX; x++) {
-//
-//                            g.setColor(new Color(bi.getRGB(x, y)));
-//
-//                            //ARGB                        0       0      0        0
-//                            //int cor = bi.getRGB(x, y) & 0b00000000111111100000000011111111;
-//                            //g.setColor(new Color(cor));
-//
-//                            g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
-//
-//                        }
-//                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+            try {
+                for(int x = 0; x <= 1536; x += 384){
+                    for(int y = 0; y <= 864; y += 216){
+                        int finalX = x;
+                        int finalY = y;
+                        Thread t1 = new Thread(){
+                            @Override
+                            public void run() {
+                                while (true) {
+                                    Robot r;
+                                    try {
+                                        r = new Robot();
+                                        int telaX = 384;
+                                        int telaY = 216;
+                                        BufferedImage bi = r.createScreenCapture(new Rectangle(finalX, finalY, telaX, telaY)); // by block
+                                        tcpCom.sendCommand(bi, finalX, finalY);
+                                        Thread.sleep(300);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        };
+                        t1.start();
+                    }
                 }
-
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+
         }
         capturar = false;
     }
@@ -113,7 +111,11 @@ public class Client extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Client().setVisible(true);
+                try {
+                    new Client().setVisible(true);
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
