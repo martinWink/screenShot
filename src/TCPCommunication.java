@@ -6,19 +6,22 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 public class TCPCommunication {
 
     private String targetIP;
     private DatagramSocket senderSocket;
+    private int port;
 
-    public TCPCommunication(String targetIP) throws SocketException {
+    public TCPCommunication(String targetIP, int port) throws SocketException {
         this.targetIP = targetIP;
         this.senderSocket = new DatagramSocket();
+        this.port = port;
     }
 
-    public void sendCommand(BufferedImage command, int xPosition, int yPosition) throws IOException {
+    public void sendImageCommand(BufferedImage command, int xPosition, int yPosition) throws IOException {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -54,7 +57,12 @@ public class TCPCommunication {
             aux++;
         }
 
-        DatagramPacket send = new DatagramPacket(data, data.length, InetAddress.getByName(targetIP), 5000);
+        DatagramPacket send = new DatagramPacket(data, data.length, InetAddress.getByName(targetIP), port);
+        senderSocket.send(send);
+    }
+
+    public void sendSoundComand(byte[] soundData) throws IOException {
+        DatagramPacket send = new DatagramPacket(soundData, soundData.length, InetAddress.getByName(targetIP), port);
         senderSocket.send(send);
     }
 
